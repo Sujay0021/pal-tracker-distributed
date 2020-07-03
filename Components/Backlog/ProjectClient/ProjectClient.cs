@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Runtime.Serialization.Json;
@@ -11,11 +12,13 @@ namespace Backlog.ProjectClient
         private readonly HttpClient _client;
         private readonly ILogger<ProjectClient> _logger;
         private readonly IDictionary<long, ProjectInfo> _projectCache = new Dictionary<long, ProjectInfo>();
+        private readonly Func<Task<string>> _accessTokenFn;
 
-        public ProjectClient(HttpClient client, ILogger<ProjectClient> logger)
+        public ProjectClient(HttpClient client, ILogger<ProjectClient> logger, Func<Task<string>> accessTokenFn)
         {
             _client = client;
             _logger = logger;
+            _accessTokenFn = accessTokenFn;
         }
 
         public async Task<ProjectInfo> Get(long projectId) =>
