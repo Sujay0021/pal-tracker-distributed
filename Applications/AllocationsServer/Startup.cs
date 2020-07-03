@@ -8,6 +8,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Steeltoe.CloudFoundry.Connector.MySql.EFCore;
+using Steeltoe.Common.Discovery;
+using Steeltoe.Discovery.Client;
 using Steeltoe.Management.CloudFoundry;
 
 namespace AllocationsServer
@@ -28,12 +30,15 @@ namespace AllocationsServer
 
             services.AddControllers();
 
+            services.AddDiscoveryClient(Configuration);
+
             services.AddScoped<IAllocationDataGateway, AllocationDataGateway>();
             services.AddDbContext<AllocationContext>(options => options.UseMySql(Configuration));
             
             services.AddSingleton<IProjectClient>(sp =>
             {
-                var httpClient = new HttpClient
+                var handler = new DiscoveryHttpClientHandler(sp.GetService<IDiscoveryClient>());
+                var httpClient = new HttpClient(handler, false)
                 {
                     BaseAddress = new Uri(Configuration.GetValue<string>("REGISTRATION_SERVER_ENDPOINT"))
                 };
@@ -52,6 +57,8 @@ namespace AllocationsServer
             }
 
             app.UseCloudFoundryActuators();
+
+            app.UseDiscoveryClient();
 
             app.UseRouting();
 
